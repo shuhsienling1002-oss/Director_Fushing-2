@@ -165,8 +165,8 @@ def plan_itinerary(travel_date, days, budget_level, group):
 # ==========================================
 st.markdown("""
     <div class="header-box">
-        <div style="font-size: 26px; font-weight: bold;">🌸 2026 復興區賞櫻・全連動智慧導遊</div>
-        <div style="font-size: 15px; margin-top: 5px;">桃園市復興區長 <b>蘇佐璽</b> 幫您搞定「住」與「玩」的完美銜接 ❤️</div>
+        <div style="font-size: 26px; font-weight: bold;">🌸 2026 復興區賞櫻行程</div>
+        <div style="font-size: 15px; margin-top: 5px;">桃園市復興區長 <b>蘇佐璽</b>邀請您 ❤️</div>
     </div>
 """, unsafe_allow_html=True)
 
@@ -282,3 +282,4 @@ if btn:
         price_base = 1500 if "小資" in budget else (3000 if "舒適" in budget else 6000)
         st.metric("預估總花費 (含住宿)", f"${price_base} /人")
         st.warning("櫻花季 (2月) 住宿強烈建議提前 3-6 個月預訂！")
+
