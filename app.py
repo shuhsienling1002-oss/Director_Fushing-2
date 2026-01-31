@@ -192,7 +192,7 @@ def analyze_trip(travel_date, group):
 # ==========================================
 st.markdown("""
     <div class="header-box">
-        <div class="header-title">🌸 2026 復興區花季全攻略</div>
+        <div class="header-title">🌸 2026 復興區花季攻略</div>
         <div class="header-subtitle">桃園市復興區長 <b>蘇佐璽</b> 邀請您 ❤️</div>
     </div>
 """, unsafe_allow_html=True)
@@ -299,3 +299,4 @@ if generate_btn:
 
 else:
     st.info("👆 請調整上方日期與人數，按下按鈕生成行程！")
+
