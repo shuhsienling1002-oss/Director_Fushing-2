@@ -194,8 +194,8 @@ def plan_itinerary(travel_date, days, budget_level, group):
 # ==========================================
 st.markdown("""
     <div class="header-box">
-        <div style="font-size: 26px; font-weight: bold;">🌸 2026 復興區賞櫻・完全攻略</div>
-        <div style="font-size: 15px; margin-top: 5px;">桃園市復興區長 <b>蘇佐璽</b> 獻給您：30處秘境 x 住宿智慧連動 ❤️</div>
+        <div style="font-size: 26px; font-weight: bold;">🌸 2026 復興區賞櫻攻略</div>
+        <div style="font-size: 15px; margin-top: 5px;">桃園市復興區長 <b>蘇佐璽</b> 邀請您❤️</div>
     </div>
 """, unsafe_allow_html=True)
 
@@ -342,3 +342,4 @@ if btn:
                         <div style="font-size: 12px; color: #E91E63; margin-top: 5px;">💰 {s['fee']}</div>
                     </div>
                     """, unsafe_allow_html=True)
+
