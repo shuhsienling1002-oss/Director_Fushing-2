@@ -8,7 +8,7 @@ from datetime import datetime, date
 st.set_page_config(
     page_title="2026 復興區全境賞櫻制霸地圖",
     page_icon="🌸",
-    layout="wide", # 改為寬版以容納更多資訊
+    layout="wide",
     initial_sidebar_state="collapsed"
 )
 
@@ -36,7 +36,7 @@ st.markdown("""
         margin-top: -60px;
     }
     
-    /* 景點卡片 (Grid Layout) */
+    /* 景點卡片 */
     .spot-card {
         background: white;
         padding: 15px;
@@ -45,6 +45,7 @@ st.markdown("""
         box-shadow: 0 2px 8px rgba(0,0,0,0.05);
         height: 100%;
         transition: transform 0.2s;
+        margin-bottom: 10px;
     }
     .spot-card:hover {
         transform: translateY(-3px);
@@ -61,10 +62,10 @@ st.markdown("""
         display: inline-block;
         margin-right: 5px;
     }
-    .tag-front { background-color: #2E8B57; } /* 前山 */
-    .tag-tribe { background-color: #D2691E; } /* 部落 */
-    .tag-back { background-color: #C71585; }  /* 後山 */
-    .tag-secret { background-color: #663399; } /* 隱藏秘境 */
+    .tag-front { background-color: #2E8B57; }
+    .tag-tribe { background-color: #D2691E; }
+    .tag-back { background-color: #C71585; }
+    .tag-secret { background-color: #663399; }
     
     /* 花種標籤 */
     .flower-tag {
@@ -85,7 +86,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ==========================================
-# 3. 終極資料庫 (30+ 景點，一個都不漏)
+# 3. 終極資料庫 (30+ 景點)
 # ==========================================
 all_spots = [
     # --- 前山 (入門輕鬆) ---
@@ -164,30 +165,30 @@ for i, spot in enumerate(filtered_spots):
     
     # 判斷是否為特殊秘境
     is_secret = "★" in spot['desc']
+    secret_badge = '<span class="tag tag-secret">秘境</span>' if is_secret else ''
     
     with cols[i % 2]:
-        secret_badge = '<span class="tag tag-secret">秘境</span>' if is_secret else ''
-        
-        st.markdown(f"""
-        <div class="spot-card">
-            <div style="font-weight: bold; font-size: 18px; color: #333; margin-bottom: 5px;">
-                <span class="tag {tag_class}">{spot['region']}</span>
-                {spot['name']}
-            </div>
-            <div style="margin-bottom: 8px;">
-                {secret_badge}
-                <span class="flower-tag">🌸 {spot['type']}</span>
-                <span style="font-size: 12px; color: #666; margin-left: 5px;">📅 {spot['month'][0]}-{spot['month'][-1]}月</span>
-            </div>
-            <div style="font-size: 14px; color: #555; line-height: 1.4; margin-bottom: 8px;">
-                {spot['desc']}
-            </div>
-            <div style="font-size: 13px; color: #E91E63; font-weight: bold;">
-                💰 {spot['fee']}
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-        st.write("") # 間距
+        # ⚠️ 關鍵修正：HTML 字串完全靠左，避免被誤判為 Markdown 程式碼區塊
+        card_html = f"""
+<div class="spot-card">
+    <div style="font-weight: bold; font-size: 18px; color: #333; margin-bottom: 5px;">
+        <span class="tag {tag_class}">{spot['region']}</span>
+        {spot['name']}
+    </div>
+    <div style="margin-bottom: 8px;">
+        {secret_badge}
+        <span class="flower-tag">🌸 {spot['type']}</span>
+        <span style="font-size: 12px; color: #666; margin-left: 5px;">📅 {spot['month'][0]}-{spot['month'][-1]}月</span>
+    </div>
+    <div style="font-size: 14px; color: #555; line-height: 1.4; margin-bottom: 8px;">
+        {spot['desc']}
+    </div>
+    <div style="font-size: 13px; color: #E91E63; font-weight: bold;">
+        💰 {spot['fee']}
+    </div>
+</div>
+"""
+        st.markdown(card_html, unsafe_allow_html=True)
 
 # ==========================================
 # 5. 底部互動區
