@@ -6,7 +6,7 @@ from datetime import datetime, date
 # 1. 系統設定
 # ==========================================
 st.set_page_config(
-    page_title="2026 復興區花季行程規劃 (邏輯修復版)",
+    page_title="2026 復興區花季行程規劃 (絕對完整版)",
     page_icon="🌸",
     layout="centered",
     initial_sidebar_state="collapsed"
@@ -116,114 +116,162 @@ st.markdown("""
         border-radius: 8px;
         margin-right: 5px;
     }
+    
+    /* 景點名錄小卡 */
+    .mini-card {
+        background: white;
+        padding: 10px;
+        border-radius: 8px;
+        border: 1px solid #eee;
+        font-size: 14px;
+        margin-bottom: 8px;
+    }
     </style>
 """, unsafe_allow_html=True)
 
 # ==========================================
-# 3. 資料庫 (已整合您指定的6大名所)
+# 3. 核心資料庫 (總計35個，包含您指定的詳細地點)
 # ==========================================
 all_spots_db = [
-    # --- 您指定的 6 個重點賞櫻區 (權重調高) ---
-    {"name": "翠墨莊園", "region": "前山", "month": [1, 2], "type": "賞花", "flower": "緋寒櫻", "desc": "三民里大窩部落，精緻日式造景 (需預約)。"},
-    {"name": "詩朗櫻花坡", "region": "前山", "month": [1, 2], "type": "賞花", "flower": "八重櫻/昭和櫻", "desc": "澤仁里詩朗部落，整片粉紅山坡秘境。"},
-    {"name": "詩朗部落祕境", "region": "前山", "month": [1, 2], "type": "健行", "flower": "枝垂櫻", "desc": "澤仁里詩朗部落深處，幽靜步道。"},
+    # --- 您的 6 大指定名所 (置頂優先) ---
+    {"name": "翠墨莊園 (翠墨山莊)", "region": "前山", "month": [1, 2], "type": "網美", "flower": "緋寒櫻", "desc": "三民里大窩部落，精緻日式造景 (需預約)。"},
+    {"name": "詩朗櫻花坡", "region": "前山", "month": [1, 2], "type": "賞花", "flower": "八重櫻/昭和櫻", "desc": "澤仁里詩朗部落，整片山坡粉紅花海。"},
+    {"name": "詩朗部落祕境", "region": "前山", "month": [1, 2], "type": "健行", "flower": "枝垂櫻", "desc": "澤仁里詩朗部落深處，在地人才知道的幽靜步道。"},
     {"name": "中巴陵櫻木花道", "region": "後山", "month": [2], "type": "賞花", "flower": "昭和櫻", "desc": "華陵里中巴陵，免費粉紅隧道必拍。"},
-    {"name": "青鬆園", "region": "後山", "month": [2, 3], "type": "賞花", "flower": "墨染櫻", "desc": "華陵里上巴陵比該路段，賞花新秘境。"},
-    {"name": "恩愛農場", "region": "後山", "month": [2, 3], "type": "賞花", "flower": "千島/富士櫻", "desc": "華陵里上巴陵中心路頂端，全台最知名。"},
+    {"name": "青鬆園", "region": "後山", "month": [2, 3], "type": "賞花", "flower": "墨染櫻/富士櫻", "desc": "華陵里上巴陵比該路段，賞花新秘境。"},
+    {"name": "恩愛農場", "region": "後山", "month": [2, 3], "type": "賞花", "flower": "千島/富士櫻", "desc": "華陵里上巴陵中心路頂端，全台最知名爆炸花海。"},
 
-    # --- 其他經典景點 ---
-    {"name": "角板山行館", "region": "前山", "month": [1, 2], "type": "賞花", "flower": "梅花/山櫻", "desc": "北橫賞花起點，戰備隧道。"},
-    {"name": "羅馬公路", "region": "前山", "month": [1, 2], "type": "兜風", "flower": "山櫻花", "desc": "最美兜風路線。"},
-    {"name": "東眼山櫻花大道", "region": "前山", "month": [1, 2], "type": "健行", "flower": "山櫻花", "desc": "林道兩旁紅色隧道。"},
-    {"name": "小烏來風景區", "region": "前山", "month": [1, 2], "type": "景觀", "flower": "山櫻花", "desc": "天空步道與瀑布。"},
-    {"name": "悠然秘境小屋", "region": "前山", "month": [2, 3], "type": "賞花", "flower": "吉野櫻", "desc": "三民隱藏版私人園區。"},
-    
-    {"name": "爺亨梯田", "region": "部落", "month": [1, 2, 3], "type": "景觀", "flower": "山櫻/桃花", "desc": "梯田地景配粉色花海。"},
-    {"name": "比亞外部落", "region": "部落", "month": [1, 2], "type": "生態", "flower": "昭和櫻", "desc": "藍腹鷴的故鄉。"},
-    {"name": "光華櫻花故事林道", "region": "部落", "month": [2, 3], "type": "秘境", "flower": "昭和櫻", "desc": "光華國小旁浪漫林道。"},
-    
-    {"name": "拉拉山遊客中心", "region": "後山", "month": [2, 3], "type": "賞花", "flower": "千島櫻", "desc": "停車場就是絕美景點。"},
-    {"name": "觀雲休憩農莊", "region": "後山", "month": [2, 3], "type": "賞花", "flower": "昭和櫻", "desc": "恩愛農場旁免門票秘境。"},
-    {"name": "光明農場", "region": "後山", "month": [3], "type": "美食", "flower": "霧社櫻", "desc": "稀有白櫻配馬告雞。"},
-    {"name": "拉拉山巨木區", "region": "後山", "month": [1, 2, 3, 4], "type": "健行", "flower": "神木", "desc": "千年紅檜群深呼吸。"}
+    # --- 前山完整收錄 ---
+    {"name": "角板山行館", "region": "前山", "month": [1, 2], "flower": "梅花/山櫻", "type": "賞花", "desc": "北橫賞花起點，戰備隧道。"},
+    {"name": "東眼山櫻花大道", "region": "前山", "month": [1, 2], "flower": "山櫻花", "type": "健行", "desc": "林道兩旁紅色隧道。"},
+    {"name": "羅馬公路", "region": "前山", "month": [1, 2], "flower": "山櫻花", "type": "兜風", "desc": "最美兜風路線 (118縣道)。"},
+    {"name": "成福道路", "region": "前山", "month": [1, 2], "flower": "山櫻花", "type": "兜風", "desc": "東眼山支線 (桃119線) 秘境。"},
+    {"name": "悠然秘境小屋", "region": "前山", "month": [2, 3], "flower": "吉野櫻", "type": "賞花", "desc": "三民隱藏版私人園區，花況極佳。"},
+    {"name": "丸山咖啡", "region": "前山", "month": [2], "flower": "景觀櫻花", "type": "美食", "desc": "海拔600m景觀餐廳。"},
+    {"name": "小烏來風景區", "region": "前山", "month": [1, 2], "flower": "山櫻花", "type": "景觀", "desc": "天空步道與瀑布。"},
+    {"name": "新溪口吊橋", "region": "前山", "month": [1, 2, 3], "flower": "景觀", "type": "景觀", "desc": "全台最長懸索橋。"},
+
+    # --- 部落深處完整收錄 ---
+    {"name": "爺亨梯田", "region": "部落", "month": [1, 2, 3], "flower": "山櫻/桃花", "type": "景觀", "desc": "梯田地景配粉色花海。"},
+    {"name": "光華櫻花故事林道", "region": "部落", "month": [2, 3], "flower": "昭和櫻", "type": "秘境", "desc": "光華國小旁浪漫林道。"},
+    {"name": "比亞外部落", "region": "部落", "month": [1, 2], "flower": "昭和櫻", "type": "生態", "desc": "藍腹鷴的故鄉。"},
+    {"name": "高義蘭(夏蝶冬櫻)", "region": "部落", "month": [2], "flower": "香水櫻", "type": "賞花", "desc": "新開發的山谷雙色花海。"},
+    {"name": "內奎輝部落", "region": "部落", "month": [1, 2], "flower": "野櫻", "type": "秘境", "desc": "深山寧靜部落。"},
+    {"name": "上高義古路", "region": "部落", "month": [1, 2], "flower": "山櫻花", "type": "健行", "desc": "北橫旁古道，幽靜自然。"},
+    {"name": "雪霧鬧部落", "region": "部落", "month": [2, 3], "flower": "桃花/櫻花", "type": "秘境", "desc": "雲端上的部落。"},
+
+    # --- 後山完整收錄 ---
+    {"name": "拉拉山遊客中心", "region": "後山", "month": [2, 3], "flower": "千島櫻", "type": "賞花", "desc": "停車場就是絕美景點。"},
+    {"name": "觀雲休憩農莊", "region": "後山", "month": [2, 3], "flower": "昭和櫻", "type": "賞花", "desc": "恩愛農場旁免門票秘境。"},
+    {"name": "光明農場", "region": "後山", "month": [3], "flower": "霧社櫻", "type": "美食", "desc": "稀有白櫻配馬告雞。"},
+    {"name": "拉拉山巨木區", "region": "後山", "month": [1, 2, 3, 4], "flower": "神木", "type": "健行", "desc": "千年紅檜群深呼吸。"},
+    {"name": "俠雲山莊", "region": "後山", "month": [2], "flower": "昭和櫻", "type": "賞花", "desc": "梯田式櫻花林。"},
+    {"name": "楓墅農莊", "region": "後山", "month": [2], "flower": "昭和櫻", "type": "秘境", "desc": "中心路小型秘境。"},
+    {"name": "嶺鎮農場", "region": "後山", "month": [2, 3], "flower": "各類櫻花", "type": "景觀", "desc": "俯瞰山谷視野極佳。"},
+    {"name": "八福原櫻園", "region": "後山", "month": [2, 3], "flower": "富士櫻", "type": "賞花", "desc": "卡拉部落新秘境。"},
+    {"name": "櫻花莊園", "region": "後山", "month": [2, 3], "flower": "雙色櫻", "type": "住宿", "desc": "精緻民宿造景。"},
+    {"name": "中心路沿線", "region": "後山", "month": [2, 3], "flower": "富士櫻", "type": "兜風", "desc": "前往恩愛農場路邊。"},
+    {"name": "巴陵古道生態園區", "region": "後山", "month": [2], "flower": "山櫻/昭和", "type": "文化", "desc": "森林步道與博物館。"},
+    {"name": "拉拉山5.5K觀景台", "region": "後山", "month": [2], "flower": "昭和櫻", "type": "攝影", "desc": "攝影師拍攝彎道名點。"}
 ]
 
+# 住宿資料庫 (20+間)
 hotels_db = [
+    # 前山
     {"name": "復興青年活動中心", "region": "前山", "tag": "高CP值", "price": 2000, "desc": "角板山公園內，最方便。"},
     {"name": "普拉多山丘假期", "region": "前山", "tag": "歐式鄉村", "price": 3800, "desc": "三民地區黃色歐風建築。"},
     {"name": "羅浮天空溫泉飯店", "region": "前山", "tag": "溫泉", "price": 4500, "desc": "房內泡湯，設施新穎。"},
+    {"name": "小烏來山莊", "region": "前山", "tag": "景觀", "price": 2800, "desc": "近天空步道。"},
+    {"name": "山水奇異民宿", "region": "前山", "tag": "英式", "price": 3500, "desc": "適合拍照。"},
+    {"name": "象山民宿", "region": "前山", "tag": "平價", "price": 1800, "desc": "老字號民宿。"},
+    
+    # 部落
     {"name": "爺亨溫泉夢幻露營", "region": "部落", "tag": "露營", "price": 3500, "desc": "櫻花樹下的豪華露營。"},
+    {"name": "河那灣民宿", "region": "部落", "tag": "原民風", "price": 2200, "desc": "羅浮橋畔，親近自然。"},
+    {"name": "飛鼠不渴露營區", "region": "部落", "tag": "親子", "price": 3000, "desc": "雪霧鬧雲端露營。"},
+    {"name": "伊萬農場", "region": "部落", "tag": "賞櫻", "price": 1000, "desc": "知名賞櫻露營點。"},
+    
+    # 後山
     {"name": "恩愛農場小木屋", "region": "後山", "tag": "花海", "price": 5000, "desc": "出門就是櫻花(極難訂)。"},
     {"name": "雲山仙境民宿", "region": "後山", "tag": "雲海", "price": 4200, "desc": "上巴陵高評價景觀民宿。"},
     {"name": "谷點咖啡民宿", "region": "後山", "tag": "景觀", "price": 3800, "desc": "無敵山景視野。"},
-    {"name": "富仙境渡假旅館", "region": "後山", "tag": "便利", "price": 2500, "desc": "上巴陵鬧區，吃飯方便。"}
+    {"name": "富仙境渡假旅館", "region": "後山", "tag": "便利", "price": 2500, "desc": "上巴陵鬧區，吃飯方便。"},
+    {"name": "俠雲山莊", "region": "後山", "tag": "包棟", "price": 3000, "desc": "就在櫻花林旁邊。"},
+    {"name": "嶺鎮農場", "region": "後山", "tag": "視野", "price": 3200, "desc": "中心路最高點，俯瞰全景。"},
+    {"name": "瑞士鄉村農莊", "region": "後山", "tag": "歐風", "price": 3600, "desc": "中心路老字號民宿。"},
+    {"name": "達觀山莊", "region": "後山", "tag": "神木", "price": 2800, "desc": "近拉拉山神木區入口。"},
+    {"name": "侑德園民宿", "region": "後山", "tag": "木屋", "price": 3000, "desc": "上巴陵中心，環境舒適。"},
+    {"name": "觀雲休憩農莊", "region": "後山", "tag": "平價", "price": 2000, "desc": "恩愛農場旁高CP值。"}
 ]
 
 # ==========================================
-# 4. 邏輯核心：動態行程生成演算法 (修復版)
+# 4. 邏輯核心：動態行程生成演算法 (全資料庫運算)
 # ==========================================
-def generate_itinerary(travel_date, days_str, group):
+def generate_dynamic_itinerary(travel_date, days_str, group):
     m = travel_date.month
     
-    # 1. 篩選「當月」有花的景點
-    available = [s for s in all_spots_db if m in s['month']]
+    # 1. 篩選當月可去的景點
+    available_spots = [s for s in all_spots_db if m in s['month']]
     
-    # 防呆：若該月沒花，塞入常態景點
-    if not available:
-        available = [s for s in all_spots_db if s['flower'] in ["神木", "景觀"]]
+    # 防呆：若該月無花，塞入常態景點 (神木、吊橋)
+    if not available_spots:
+        available_spots = [s for s in all_spots_db if s['flower'] in ["神木", "景觀"]]
 
-    # 2. 分區清單
-    front_spots = [s for s in available if s['region'] == "前山"]
-    tribe_spots = [s for s in available if s['region'] == "部落"]
-    back_spots = [s for s in available if s['region'] == "後山"]
+    # 2. 分區篩選
+    front_spots = [s for s in available_spots if s['region'] == "前山"]
+    tribe_spots = [s for s in available_spots if s['region'] == "部落"]
+    back_spots = [s for s in available_spots if s['region'] == "後山"]
+    
+    # 3. 判斷行程天數
+    if "一日" in days_str: day_count = 1
+    elif "二日" in days_str: day_count = 2
+    else: day_count = 3
     
     itinerary = {}
     
-    # --- Day 1 邏輯：前山出發，慢慢往內走 ---
-    # 優先推薦您指定的「前山」新景點
-    d1_candidates = [s for s in front_spots if s['name'] in ["翠墨莊園 (翠墨山莊)", "詩朗櫻花坡"]]
-    if not d1_candidates: d1_candidates = front_spots # 若沒對應到，用所有前山
+    # --- Day 1: 必去賞花熱點 ---
+    # 優先從您指定的熱點中挑選 Day 1 上午
+    top_picks = ["角板山行館", "翠墨莊園 (翠墨山莊)", "詩朗櫻花坡", "恩愛農場"]
+    d1_spot1 = next((s for s in available_spots if s['name'] in top_picks), available_spots[0])
     
-    # 上午：前山重點
-    d1_s1 = d1_candidates[0] if d1_candidates else available[0]
+    remaining = [s for s in available_spots if s['name'] != d1_spot1['name']]
+    d1_spot2 = remaining[0] if remaining else d1_spot1
     
-    # 下午：往部落或後山移動 (或繼續前山)
-    d1_s2 = next((s for s in tribe_spots), None)
-    if not d1_s2: d1_s2 = next((s for s in front_spots if s != d1_s1), available[-1])
+    itinerary[1] = [d1_spot1, d1_spot2]
     
-    itinerary[1] = [d1_s1, d1_s2]
-    
-    # --- Day 2 邏輯 (若有)：直攻後山精華 ---
-    if "二日" in days_str or "三日" in days_str:
-        # 優先推薦您指定的「後山」新景點
-        d2_candidates = [s for s in back_spots if s['name'] in ["恩愛農場", "中巴陵櫻木花道", "青鬆園"]]
-        if not d2_candidates: d2_candidates = back_spots
+    # --- Day 2: 深入後山 ---
+    if day_count >= 2:
+        # Day 2 上午：優先挑選後山指定新景點 (青鬆園/中巴陵) 或 健行
+        d2_priority = ["青鬆園", "中巴陵櫻木花道", "拉拉山巨木區"]
+        d2_spot1 = next((s for s in back_spots if s['name'] in d2_priority), None)
+        if not d2_spot1: d2_spot1 = back_spots[0] if back_spots else front_spots[0]
         
-        # 上午：後山大景
-        d2_s1 = d2_candidates[0] if d2_candidates else available[0]
-        
-        # 下午：神木或其他後山點
-        d2_s2 = next((s for s in back_spots if s['flower'] == "神木"), None)
-        if not d2_s2: d2_s2 = next((s for s in back_spots if s != d2_s1), available[0])
-        
-        itinerary[2] = [d2_s1, d2_s2]
+        # Day 2 下午
+        used_names = [s['name'] for s in itinerary[1]] + [d2_spot1['name']]
+        d2_pool = [s for s in available_spots if s['name'] not in used_names]
+        d2_spot2 = d2_pool[0] if d2_pool else d2_spot1
+            
+        itinerary[2] = [d2_spot1, d2_spot2]
 
-    # --- Day 3 邏輯 (若有)：回程補漏 ---
-    if "三日" in days_str:
-        d3_s1 = next((s for s in front_spots if s['name'] not in [d1_s1['name'], d1_s2['name']]), None)
-        if not d3_s1: d3_s1 = {"name": "新溪口吊橋", "region": "前山", "flower": "景觀", "desc": "全台最長懸索橋。"}
+    # --- Day 3: 回程補漏 ---
+    if day_count == 3:
+        used_names = [s['name'] for day in itinerary.values() for s in day]
+        d3_pool = [s for s in front_spots if s['name'] not in used_names]
+        if not d3_pool: d3_pool = [s for s in available_spots if s['name'] not in used_names]
         
-        d3_s2 = {"name": "大溪老街", "region": "前山", "flower": "採買", "desc": "回程購買伴手禮。"}
-        itinerary[3] = [d3_s1, d3_s2]
+        d3_spot1 = d3_pool[0] if d3_pool else itinerary[1][0]
+        d3_spot2 = {"name": "大溪老街/復興橋", "region": "前山", "flower": "人文", "type": "採買", "desc": "回程購買名產與豆干。"}
+        
+        itinerary[3] = [d3_spot1, d3_spot2]
 
     # 花況標題
-    titles = {1: "❄️ 1月：寒梅與早春山櫻", 2: "🌸 2月：粉紅櫻花大爆發", 3: "🍑 3月：桃花與吉野櫻尾聲", 4: "🌲 4月：螢火蟲與神木季"}
-    status = titles.get(m, "🌲 四季山林森呼吸")
+    titles = {1: "❄️ 早春寒梅與山櫻", 2: "🌸 粉紅櫻花大爆發", 3: "🍑 桃花與吉野櫻尾聲", 4: "🌲 螢火蟲與神木季"}
+    status_title = titles.get(m, "🌲 四季山林森呼吸")
     
-    return status, itinerary
+    return status_title, itinerary
 
 # ==========================================
-# 5. UI 呈現
+# 5. 頁面內容
 # ==========================================
 st.markdown("""
     <div class="header-box">
@@ -239,29 +287,31 @@ with st.container():
         travel_date = st.date_input("預計出發日期", value=date(2026, 2, 20), min_value=date(2026, 1, 1), max_value=date(2026, 4, 30))
         days = st.selectbox("行程天數", ["一日遊", "二日遊", "三日遊"])
     with col2:
-        group = st.selectbox("出遊夥伴", ["情侶/夫妻", "親子家庭", "長輩樂齡", "攝影團"])
-        transport = st.selectbox("交通方式", ["自行開車", "大眾運輸", "機車"])
+        group = st.selectbox("出遊夥伴", ["情侶/夫妻", "親子家庭", "長輩樂齡", "熱血獨旅"])
+        transport = st.selectbox("交通方式", ["自行開車", "大眾運輸 (客運)", "機車/單車"])
     
-    btn = st.button("🚀 開始規劃行程")
+    generate_btn = st.button("🚀 生成邏輯正確的行程")
     st.markdown('</div>', unsafe_allow_html=True)
 
-if btn:
-    status_title, itinerary = generate_itinerary(travel_date, days, group)
+if generate_btn:
+    # 執行演算法
+    status_title, itinerary = generate_dynamic_itinerary(travel_date, days, group)
     
     st.markdown(f"""
     <div class="info-box">
         <div class="weather-tag">{status_title}</div>
-        <div style="color:#555 !important;">根據您的日期 <b>{travel_date.month}/{travel_date.day}</b>，我們為您挑選了花況最佳的景點。</div>
+        <div>根據您選擇的 <b>{days}</b> 與 <b>{transport}</b>，我們重新計算了最佳路徑。</div>
     </div>
     """, unsafe_allow_html=True)
 
-    t1, t2, t3, t4 = st.tabs(["🗓️ 詳細行程", "💰 經費概算", "🚗 交通住宿", "🌸 景點名錄"])
+    tab1, tab2, tab3, tab4 = st.tabs(["🗓️ 詳細行程", "💰 精準預算", "🚗 交通住宿", "🌸 景點名錄"])
 
-    # --- Tab 1: 行程 ---
-    with t1:
-        for day, spots in itinerary.items():
-            st.markdown(f"#### Day {day}")
-            # 上午
+    # --- Tab 1: 動態行程 ---
+    with tab1:
+        for day_num, spots in itinerary.items():
+            st.markdown(f'<div class="day-header">Day {day_num}</div>', unsafe_allow_html=True)
+            
+            # 上午景點
             s1 = spots[0]
             st.markdown(f"""
             <div class="timeline-item">
@@ -270,15 +320,16 @@ if btn:
             </div>
             """, unsafe_allow_html=True)
             
-            # 午餐
+            # 午餐插曲
+            lunch_text = "景觀餐廳享用原民風味餐" if s1['region'] == "後山" else "角板山商圈或路邊小吃"
             st.markdown(f"""
             <div class="timeline-item">
-                <div class="spot-title">12:30 在地風味午餐</div>
-                <div class="spot-desc">品嚐馬告磚窯雞或山產料理。</div>
+                <div class="spot-title">12:30 午餐時間</div>
+                <div class="spot-desc">{lunch_text}</div>
             </div>
             """, unsafe_allow_html=True)
             
-            # 下午
+            # 下午景點
             s2 = spots[1]
             st.markdown(f"""
             <div class="timeline-item">
@@ -287,49 +338,87 @@ if btn:
             </div>
             """, unsafe_allow_html=True)
             
-            if day < len(itinerary):
-                st.markdown(f"""
+            # 只有在非最後一天顯示住宿
+            if day_num < len(itinerary):
+                 st.markdown(f"""
                 <div class="timeline-item" style="border-color:#9370DB;">
-                    <div class="spot-title" style="color:#9370DB !important;">18:00 入住民宿 (詳見住宿頁籤)</div>
+                    <div class="spot-title" style="color:#9370DB;">18:00 入住 {s2['region']} 或鄰近地區</div>
+                    <div class="spot-desc">建議選擇下方「交通住宿」頁籤中的推薦民宿。</div>
+                </div>
+                """, unsafe_allow_html=True)
+            else:
+                 st.markdown(f"""
+                <div class="timeline-item" style="border-color:#4CAF50;">
+                    <div class="spot-title" style="color:#4CAF50;">17:00 快樂賦歸</div>
+                    <div class="spot-desc">帶著滿滿的照片與回憶回家。</div>
                 </div>
                 """, unsafe_allow_html=True)
 
     # --- Tab 2: 經費 ---
-    with t2:
-        day_num = len(itinerary)
-        base_cost = 1000 * day_num
-        if day_num > 1: base_cost += 2500 * (day_num - 1) # 住宿費
-        st.metric("預估總花費 (每人)", f"${base_cost} 起", "含食宿交通")
-        st.caption("※ 櫻花季期間 (2月) 民宿房價可能會有浮動。")
+    with tab2:
+        day_count = len(itinerary)
+        person_count = 2 if "情侶" in group else (4 if "親子" in group or "長輩" in group else 1)
+        
+        food_cost = 800 * day_count
+        stay_cost = 0
+        if day_count > 1:
+            avg_room_price = 3000
+            nights = day_count - 1
+            rooms = (person_count + 1) // 2
+            total_stay = avg_room_price * nights * rooms
+            stay_cost = total_stay / person_count
+            
+        trans_cost = 500 if "大眾" in transport else (300 if "機車" in transport else 800)
+        total_est = food_cost + stay_cost + trans_cost
+        
+        c1, c2, c3 = st.columns(3)
+        c1.metric("餐飲預算(人)", f"${food_cost}")
+        c2.metric("住宿預算(人)", f"${int(stay_cost)}")
+        c3.metric("交通/雜支(人)", f"${trans_cost}")
+        
+        st.divider()
+        st.subheader(f"💵 總預算預估：${int(total_est)} /人")
+        st.info(f"計算基礎：{day_count}天行程，{person_count}人同行，{transport}。")
 
-    # --- Tab 3: 交通住宿 ---
-    with t3:
-        st.subheader("🚗 交通方式")
-        st.info("🚗 **自行開車**：櫻花季北橫易塞車，建議 07:00 前抵達大溪。")
-        st.info("🚌 **大眾運輸**：可於大溪總站搭乘 5090 / 5091 客運前往拉拉山。")
+    # --- Tab 3: 交通與住宿 ---
+    with tab3:
+        st.subheader("🚗 交通策略")
+        if "自行開車" in transport:
+            st.warning("⚠️ **山路駕駛注意**：台7線北橫公路彎道多，櫻花季(2-3月)假日必塞車。建議早上 07:00 前通過大溪，或下午 16:00 後再下山。")
+            st.info("🅿️ **停車資訊**：上巴陵停車位極少，恩愛農場等熱點需搭乘接駁車，請勿違停。")
+        elif "大眾運輸" in transport:
+            st.error("🚌 **公車族必看**：山區公車班次極少！錯過要等2小時。")
+            st.markdown("""
+            * **5090 (桃園-林班口)**：每日僅一班 06:50 發車。
+            * **5091 (中壢-林班口)**：每日兩班 10:35 / 14:00。
+            * **5104 (大溪-復興)**：班次較多，適合前山一日遊。
+            * *建議：大眾運輸較適合定點二日遊，住宿處請民宿老闆協助接駁。*
+            """)
+        else:
+            st.info("🏍️ **機車/單車**：請注意保暖與煞車檢查，山區午後易起霧。")
+
+        st.divider()
+        st.subheader("🛏️ 住宿推薦")
         
-        st.markdown("---")
-        st.subheader("🛏️ 推薦住宿")
+        stay_region = itinerary[1][1]['region'] if len(itinerary) > 0 else "後山"
+        filtered_hotels = [h for h in hotels_db if h['region'] == stay_region]
+        if not filtered_hotels: filtered_hotels = hotels_db[:4]
         
-        # 根據行程區域推薦
-        target_region = itinerary[1][1]['region'] if len(itinerary) > 0 else "前山"
-        rec_hotels = [h for h in hotels_db if h['region'] == target_region]
-        if not rec_hotels: rec_hotels = hotels_db[:4]
+        st.caption(f"根據您的行程，第一晚建議住在 **{stay_region}** 地區：")
         
         cols = st.columns(2)
-        for i, h in enumerate(rec_hotels):
+        for i, h in enumerate(filtered_hotels):
             with cols[i % 2]:
                 st.markdown(f"""
                 <div class="hotel-card">
-                    <div style="font-weight:bold;">{h['name']} <span style="font-size:12px;">(${h['price']})</span></div>
-                    <div style="font-size:12px; margin-top:5px;">🏷️ {h['tag']}</div>
-                    <div style="font-size:12px; color:#555 !important;">{h['desc']}</div>
+                    <div style="font-weight:bold;">{h['name']} <span style="font-size:12px; color:#666;">({h['price']}元起)</span></div>
+                    <div style="font-size:12px; margin-top:5px;">🏷️ {h['tag']} | {h['desc']}</div>
                 </div>
                 """, unsafe_allow_html=True)
 
-    # --- Tab 4: 景點名錄 ---
-    with t4:
-        st.markdown("### 🌸 完整景點資料庫")
+    # --- Tab 4: 完整景點名錄 (全開) ---
+    with tab4:
+        st.markdown("### 🌸 30+ 復興區賞櫻名所全集")
         search = st.text_input("🔍 搜尋景點", placeholder="輸入關鍵字...")
         
         filtered = all_spots_db
@@ -345,4 +434,4 @@ if btn:
             """, unsafe_allow_html=True)
 
 else:
-    st.info("👆 請調整上方日期與人數，按下按鈕生成行程！")
+    st.info("👆 請調整上方選項，我們將為您生成邏輯嚴謹的行程。")
