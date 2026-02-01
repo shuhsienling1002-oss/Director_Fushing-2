@@ -238,7 +238,7 @@ def generate_dynamic_itinerary(travel_date, days_str, group):
 st.markdown("""
     <div class="header-box">
         <div class="header-title">🌸 2026 復興區花季攻略</div>
-        <div class="header-subtitle">邏輯修正版：精準規劃您的每一天</div>
+        <div class="header-subtitle">桃園市復興區長蘇佐璽 歡迎您！</div>
     </div>
 """, unsafe_allow_html=True)
 
@@ -392,3 +392,4 @@ if generate_btn:
 
 else:
     st.info("👆 請調整上方選項，我們將為您生成邏輯嚴謹的行程。")
+
