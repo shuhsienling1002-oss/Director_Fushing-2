@@ -345,7 +345,7 @@ def generate_dynamic_itinerary(travel_date, days_str, group):
 # ==========================================
 st.markdown("""
     <div class="header-box">
-        <div class="header-title">🌸 2026 復興區櫻花季攻略</div>
+        <div class="header-title">🌸 2026 復興區賞櫻攻略</div>
         <div class="header-subtitle">桃園市復興區長 <b>蘇佐璽</b> 邀請您 ❤️</div>
     </div>
 """, unsafe_allow_html=True)
@@ -434,3 +434,4 @@ with st.expander("📖 查看 2026 所有賞櫻熱點名錄"):
                     <span style="color:#888; font-size:12px;">{s['desc']}</span>
                 </div>
                 """, unsafe_allow_html=True)
+
