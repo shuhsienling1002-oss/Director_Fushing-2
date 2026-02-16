@@ -63,6 +63,22 @@ st.markdown("""
         color: #333333 !important;
     }
 
+    /* === 4. 特別加強：日期選單高亮 (使用者指定) === */
+    div[data-testid="stDateInput"] > label {
+        color: #C71585 !important; /* 深粉紅 */
+        font-size: 24px !important; /* 加大字體 */
+        font-weight: 900 !important;
+        text-shadow: 0px 0px 5px rgba(255, 105, 180, 0.6);
+        margin-bottom: 10px !important;
+        display: block;
+    }
+    div[data-testid="stDateInput"] div[data-baseweb="input"] {
+        border: 3px solid #FF1493 !important; /* 粗邊框 */
+        background-color: #FFF5F7 !important;
+        border-radius: 10px !important;
+        box-shadow: 0 0 15px rgba(255, 20, 147, 0.3); /* 發光特效 */
+    }
+
     /* 隱藏官方元件 */
     header {visibility: hidden;}
     footer {display: none !important;}
@@ -204,6 +220,7 @@ all_spots_db = [
     {"name": "新溪口吊橋", "region": "前山", "month": [1, 2, 3], "flower": "景觀", "type": "景觀", "fee": "門票$50", "desc": "全台最長懸索橋。"},
 
     # --- 【重點 3】高義・爺亨・下巴陵一帶 (部落) ---
+    {"name": "培雅境露營區", "region": "部落", "month": [1, 2, 3], "flower": "昭和櫻/千島櫻", "type": "露營", "fee": "洽詢", "desc": "澤仁里新興露營秘境，被粉紅花海包圍。"},
     {"name": "卡維蘭部落", "region": "部落", "month": [2, 3], "flower": "八重櫻/吉野櫻", "type": "秘境", "fee": "免門票", "desc": "高義村。吉野櫻 2/12-3/5、八重櫻 2/10-3/2。"},
     {"name": "光華櫻花故事林道", "region": "部落", "month": [1, 2, 3], "flower": "昭和櫻", "type": "秘境", "fee": "免門票", "desc": "光華國小旁。昭和櫻 2/20-3/5。"},
     {"name": "比亞外櫻花迎賓道", "region": "部落", "month": [1, 2, 3], "flower": "昭和櫻/山櫻", "type": "生態", "fee": "免門票", "desc": "昭和櫻 2/12-3/5、山櫻花 1/25-2/25。"},
@@ -337,152 +354,83 @@ with st.container():
     st.markdown('<div class="input-card">', unsafe_allow_html=True)
     col1, col2 = st.columns(2)
     with col1:
-        travel_date = st.date_input("預計出發日期", value=date(2026, 2, 20), min_value=date(2026, 1, 1), max_value=date(2026, 4, 30))
-        days = st.selectbox("行程天數", ["一日遊", "二日遊", "三日遊"])
+        # 日期選單 (CSS 已特別加強高亮)
+        travel_date = st.date_input("📅 出發日期 (必填)", value=date(2026, 2, 14))
     with col2:
-        group = st.selectbox("出遊夥伴", ["情侶/夫妻", "親子家庭", "長輩樂齡", "熱血獨旅"])
-        transport = st.selectbox("交通方式", ["自行開車", "大眾運輸 (客運)", "機車/單車"])
+        days_str = st.selectbox("🕒 行程天數", ["一日遊 (快閃)", "二日遊 (過夜)", "三日遊 (深度)"])
+        group = st.selectbox("👥 出遊夥伴", ["情侶/夫妻", "親子家庭", "長輩同行", "熱血獨旅"])
     
-    generate_btn = st.button("🚀 生成邏輯正確的行程")
+    if st.button("🚀 生成蘇區長推薦行程"):
+        st.session_state['generated'] = True
     st.markdown('</div>', unsafe_allow_html=True)
 
-if generate_btn:
-    status_title, itinerary = generate_dynamic_itinerary(travel_date, days, group)
+if st.session_state.get('generated'):
+    status_title, itinerary = generate_dynamic_itinerary(travel_date, days_str, group)
     
     st.markdown(f"""
     <div class="info-box">
-        <div class="weather-tag">{status_title}</div>
-        <div>根據您選擇的 <b>{days}</b> 與 <b>{transport}</b>，我們重新計算了最佳路徑。</div>
+        <h4>{status_title}</h4>
+        <p>為您規劃 <b>{travel_date.strftime('%Y/%m/%d')}</b> 出發的 <b>{group}</b> 行程！</p>
     </div>
     """, unsafe_allow_html=True)
 
-    tab1, tab2, tab3, tab4 = st.tabs(["🗓️ 詳細行程", "💰 精準預算", "🚗 交通住宿", "🌸 景點名錄"])
-
-    # --- Tab 1: 動態行程 ---
-    with tab1:
-        for day_num, spots in itinerary.items():
-            st.markdown(f'<div class="day-header">Day {day_num}</div>', unsafe_allow_html=True)
+    # --- 顯示行程 ---
+    for day, spots in itinerary.items():
+        st.markdown(f'<div class="day-header">Day {day}</div>', unsafe_allow_html=True)
+        
+        for i, spot in enumerate(spots):
+            time_label = "☀️ 上午" if i == 0 else "🌤️ 下午"
             
-            s1 = spots[0]
+            # 標籤生成
+            tags_html = f'<span class="spot-tag">{spot["type"]}</span>'
+            tags_html += f'<span class="spot-tag">{spot["flower"]}</span>'
+            if spot['region'] == "部落": tags_html += '<span class="spot-tag" style="background:#E6E6FA;color:#4B0082!important;">部落秘境</span>'
+            
             st.markdown(f"""
             <div class="timeline-item">
-                <div class="spot-title">09:30 {s1['name']} <span class="spot-tag">{s1['region']}</span></div>
-                <div class="spot-desc">{s1['desc']} ({s1['flower']})</div>
-            </div>
-            """, unsafe_allow_html=True)
-            
-            lunch_text = "景觀餐廳享用原民風味餐" if s1['region'] == "後山" else "角板山商圈或路邊小吃"
-            st.markdown(f"""
-            <div class="timeline-item">
-                <div class="spot-title">12:30 午餐時間</div>
-                <div class="spot-desc">{lunch_text}</div>
-            </div>
-            """, unsafe_allow_html=True)
-            
-            s2 = spots[1]
-            st.markdown(f"""
-            <div class="timeline-item">
-                <div class="spot-title">14:30 {s2['name']} <span class="spot-tag">{s2['region']}</span></div>
-                <div class="spot-desc">{s2['desc']}</div>
-            </div>
-            """, unsafe_allow_html=True)
-            
-            if day_num < len(itinerary):
-                 st.markdown(f"""
-                <div class="timeline-item" style="border-color:#9370DB;">
-                    <div class="spot-title" style="color:#9370DB;">18:00 入住 {s2['region']} 或鄰近地區</div>
-                    <div class="spot-desc">建議選擇下方「交通住宿」頁籤中的推薦民宿。</div>
+                <div class="spot-title">{time_label}：{spot['name']}</div>
+                <div style="margin: 5px 0;">{tags_html}</div>
+                <div style="font-size: 14px; color: #555;">
+                    💰 {spot['fee']} <br>
+                    📝 {spot['desc']}
                 </div>
-                """, unsafe_allow_html=True)
-            else:
-                 st.markdown(f"""
-                <div class="timeline-item" style="border-color:#4CAF50;">
-                    <div class="spot-title" style="color:#4CAF50;">17:00 快樂賦歸</div>
-                    <div class="spot-desc">帶著滿滿的照片與回憶回家。</div>
-                </div>
-                """, unsafe_allow_html=True)
+            </div>
+            """, unsafe_allow_html=True)
 
-    # --- Tab 2: 經費 ---
-    with tab2:
-        day_count = len(itinerary)
-        person_count = 2 if "情侶" in group else (4 if "親子" in group or "長輩" in group else 1)
+    # --- 住宿推薦 (僅多日遊顯示) ---
+    if "一日" not in days_str:
+        st.markdown("### 🏨 蘇區長精選住宿")
         
-        food_cost = 800 * day_count
-        stay_cost = 0
-        if day_count > 1:
-            avg_room_price = 3000
-            nights = day_count - 1
-            rooms = (person_count + 1) // 2
-            total_stay = avg_room_price * nights * rooms
-            stay_cost = total_stay / person_count
-            
-        trans_cost = 500 if "大眾" in transport else (300 if "機車" in transport else 800)
-        total_est = food_cost + stay_cost + trans_cost
-        
-        c1, c2, c3 = st.columns(3)
-        c1.metric("餐飲預算(人)", f"${food_cost}")
-        c2.metric("住宿預算(人)", f"${int(stay_cost)}")
-        c3.metric("交通/雜支(人)", f"${trans_cost}")
-        
-        st.divider()
-        st.subheader(f"💵 總預算預估：${int(total_est)} /人")
-        st.info(f"計算基礎：{day_count}天行程，{person_count}人同行，{transport}。")
-
-    # --- Tab 3: 交通與住宿 ---
-    with tab3:
-        st.subheader("🚗 交通策略")
-        if "自行開車" in transport:
-            st.warning("⚠️ **山路駕駛注意**：台7線北橫公路彎道多，櫻花季(2-3月)假日必塞車。建議早上 07:00 前抵達大溪，或下午 16:00 後再下山。")
-            st.info("🅿️ **停車資訊**：上巴陵停車位極少，恩愛農場等熱點需搭乘接駁車，請勿違停。")
-        elif "大眾運輸" in transport:
-            st.error("🚌 **公車族必看**：山區公車班次極少！錯過要等2小時。")
-            st.markdown("""
-            * **5090 (桃園-林班口)**：每日僅一班 06:50 發車。
-            * **5091 (中壢-林班口)**：每日兩班 10:35 / 14:00。
-            * **5104 (大溪-復興)**：班次較多，適合前山一日遊。
-            * *建議：大眾運輸較適合定點二日遊，住宿處請民宿老闆協助接駁。*
-            """)
+        # 簡單篩選邏輯
+        if "後山" in [s['region'] for day in itinerary.values() for s in day]:
+            rec_hotels = [h for h in hotels_db if h['region'] in ["後山", "部落"]]
         else:
-            st.info("🏍️ **機車/單車**：請注意保暖與煞車檢查，山區午後易起霧。")
+            rec_hotels = [h for h in hotels_db if h['region'] == "前山"]
+            
+        # 隨機秀 3 間
+        for h in random.sample(rec_hotels, min(3, len(rec_hotels))):
+            st.markdown(f"""
+            <div class="hotel-card">
+                <div style="font-weight:bold; color:#483D8B;">{h['name']} <span class="hotel-tag">{h['tag']}</span></div>
+                <div style="font-size:13px; color:#666; margin-top:3px;">
+                    💲 {h['price']}起 | {h['desc']}
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
 
-        st.divider()
-        st.subheader("🛏️ 住宿推薦")
-        
-        stay_region = itinerary[1][1]['region'] if len(itinerary) > 0 else "後山"
-        filtered_hotels = [h for h in hotels_db if h['region'] == stay_region]
-        if not filtered_hotels: filtered_hotels = hotels_db[:4]
-        
-        st.caption(f"根據您的行程，第一晚建議住在 **{stay_region}** 地區：")
-        
+# --- 頁尾景點總覽 ---
+with st.expander("📖 查看 2026 所有賞櫻熱點名錄"):
+    st.markdown("#### 北橫櫻花地圖總覽")
+    # 依區域分類顯示
+    for region in ["前山", "部落", "後山"]:
+        st.markdown(f"**【{region}區】**")
+        region_spots = [s for s in all_spots_db if s['region'] == region]
         cols = st.columns(2)
-        for i, h in enumerate(filtered_hotels):
+        for i, s in enumerate(region_spots):
             with cols[i % 2]:
                 st.markdown(f"""
-                <div class="hotel-card">
-                    <div style="font-weight:bold;">{h['name']} <span style="font-size:12px; color:#666;">({h['price']}元起)</span></div>
-                    <div style="font-size:12px; margin-top:5px;">🏷️ {h['tag']} | {h['desc']}</div>
+                <div class="mini-card">
+                    <b>{s['name']}</b> <span class="flower-badge">{s['flower']}</span><br>
+                    <span style="color:#888; font-size:12px;">{s['desc']}</span>
                 </div>
                 """, unsafe_allow_html=True)
-
-    # --- Tab 4: 完整景點名錄 ---
-    with tab4:
-        st.markdown("### 🌸 復興區賞櫻地圖全收錄")
-        search = st.text_input("🔍 搜尋景點", placeholder="輸入關鍵字...")
-        
-        filtered = all_spots_db
-        if search:
-            filtered = [s for s in all_spots_db if search in s['name'] or search in s['desc']]
-            
-        for s in filtered:
-            fee_info = s.get('fee', '詳見說明')
-            st.markdown(f"""
-            <div class="mini-card">
-                <b>{s['name']}</b> <span class="flower-badge">{s['flower']}</span>
-                <span style="font-size:12px; color:#666 !important; float:right;">💰 {fee_info}</span><br>
-                <span style="font-size:12px; color:#666 !important;">📍 {s['region']} | {s['desc']}</span>
-            </div>
-            """, unsafe_allow_html=True)
-
-else:
-    st.info("👆 請調整上方選項，我們將為您生成邏輯嚴謹的行程。")
-
